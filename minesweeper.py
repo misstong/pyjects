@@ -64,4 +64,15 @@ if __name__ == '__main__':
 	
 	logging.debug('debug %s port %d size %d,%d file %s' % (debug,port,sizeX,sizeY,file))
 
-	socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	server = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+	server.bind(('localhost',port))
+	server.listen(5)
+	while True:
+		conn,addr = server.accept()
+		logging.debug('client %s  %s connected' % (conn,addr))
+		while True:
+			data = conn.recv(1024)
+			# result = process(data)
+			print('server recv %s' % data.decode())
+			conn.send(data)
+		conn.close()
