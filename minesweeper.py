@@ -245,7 +245,7 @@ if __name__ == '__main__':
 			if data == 'bye':
 				break
 			print('server recvd %s' % data)
-			result = handleRequest(data)
-			print('server send result %s' % result)
-			conn.send(result.encode('utf-8'))
+			# result = handleRequest(data)
+			# print('server send result %s' % result)
+			# conn.send(result.encode('utf-8'))
 		conn.close()
