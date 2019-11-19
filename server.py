@@ -1,5 +1,5 @@
 import http.server
-import os
+import os,subprocess
 
 
 class ServerException:
@@ -10,6 +10,14 @@ class case_no_file(object):
 		return not os.path.exists(handler.full_path)
 	def act(self,handler):
 		raise ServerException("'{0}' not found".format(handler.path))
+
+class case_cgi_file(object):
+	def test(self,handler):
+		return os.path.isfile(handler.full_path) and \
+			handler.full_path.endswith('.py')
+
+	def act(self,handler):
+		handler.run_cgi(handler.full_path)
 
 class case_existing_file(object):
 	def test(self,handler):
@@ -48,6 +56,7 @@ class case_directory_no_index_file(object):
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
 	Cases = [case_no_file(),
+			 case_cgi_file(),
              case_existing_file(),
              case_directory_index_file(),
              case_directory_no_index_file(),
@@ -74,7 +83,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 
 	def do_GET(self):
 		try:
-			self.full_path = os.getcwd() + self.path
+
+			self.full_path = os.path.join(os.getcwd() , self.path[1:])
 			print(self.full_path)
 
 			for case in self.Cases:
@@ -104,6 +114,13 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 		except OSError as e:
 			msg = "'{0}' cannot be listed: '{1}'".format(full_path)
 			self.handle_error(msg)
+
+	def run_cgi(self,full_path):
+		cmd = ["python" , full_path]
+		proc = subprocess.run(cmd,shell=True,stdout=subprocess.PIPE)
+		data = proc.stdout.decode()
+		self.send_page(data)
+
 	def handle_error(self,msg):
 		content = self.Error_page.format(path=self.path,msg=msg)
 		self.send_page(content,404)
